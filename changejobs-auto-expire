@@ -1,0 +1,42 @@
+<?php
+
+/*
+ *	Plugin Name: ChangeJobs Auto Expire
+ *	Plugin URI: http://consil.co.uk
+ *	Description: Auto expire jobs listing. 28 days after job listing, expire the post
+ * 	Version 1.0
+ * 	Author: William Wetzel
+ *	License: GPL2
+ *
+*/
+
+
+//Adding daily timer using WP CRON to wordpress hook to expire jobs
+add_action( 'wp', 'expire_jobs_daily' );
+function expire_jobs_daily() {
+	if(! wp_next_scheduled( 'expire_jobs' ) ) {
+		wp_schedule_event( time(), 'daily', 'expire_jobs');
+	}
+}
+add_action( 'expire_jobs', 'expire_jobs_callback' );
+
+
+//Function to expire jobs
+function expire_jobs_callback() {
+	//Declare variables
+	global $wpdb;
+	$daystogo = "28";
+	$author = "gofetchjobs";
+
+	//Database Query Logic - Set post to draft where post is after 28, by gofetchjobs & is post
+	$sql = "UPDATE wp_posts SET 'post_status' = 'draft' WHERE 
+			'post_type' = 'post' 
+			AND DATEDIFF(NOW(), 'post_date') > '$daystogo'
+			AND 'u.ID' = '$author' 
+	";
+	
+	//Call Database Query
+	$wpdb->query( $sql );
+}
+
+?>
